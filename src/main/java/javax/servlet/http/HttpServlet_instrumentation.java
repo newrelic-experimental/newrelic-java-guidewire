@@ -56,7 +56,10 @@ public abstract class HttpServlet_instrumentation {
 			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:DateSearch:DateSearchRangeValue", "Search For Date Since");
 			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:DateSearch:DateSearchStartDate", "Search For Data From");
 			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:DateSearch:DateSearchEndDate", "Search For Data To");
+			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchAndResetInputSet:Search_act", "Search_act");
 			selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:CreateDocument", "Create Document From Template");
+			selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:CreateDocument_act", "Create Document From act");
+			selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:ViewLink_link", "ViewLink_link");
 			selectedParametersMap.put("Login:LoginScreen:LoginDV:username", "User Name");
 			
 			try {
@@ -101,7 +104,15 @@ public abstract class HttpServlet_instrumentation {
 							nrLogger.log(Level.FINER, "NATIONWIDE - request parameter: " + paramDisplayName + " = " + pValueString);
 						}
 					} 
-				} 
+				}
+			}
+			
+			Cookie[] cookies = request.getCookies();
+			for (int i = 0; i < cookies.length; i++) {
+				Cookie cookie = cookies[i];
+				if (cookie.getName().startsWith("JSESSIONID")) {
+					NewRelic.addCustomParameter(cookie.getName(), cookie.getValue());
+				}
 			}
 
 			String eventSource = request.getParameter("eventSource");
