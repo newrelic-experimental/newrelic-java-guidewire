@@ -1,10 +1,7 @@
 package javax.servlet.http;
 
-import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 
 import com.newrelic.agent.bridge.AgentBridge;
@@ -22,116 +19,126 @@ public abstract class HttpServlet_instrumentation {
 	
 	@NewField 
 	private static Map<String, String> selectedParametersMap = null;
-	
-	public HttpServlet_instrumentation() {
-	
-	}
-	
+		
 	@SuppressWarnings("unchecked")
 	@Trace(dispatcher = true)
 	protected void service(HttpServletRequest request, HttpServletResponse response) {
 		Logger nrLogger = NewRelic.getAgent().getLogger();
 		nrLogger.log(Level.FINER, "NATIONWIDE - Starting HttpServlet service method");
-		if (selectedParametersMap == null) {
-			selectedParametersMap = new HashMap<String, String>();
-			selectedParametersMap.put("eventSource", "eventSource");
-			selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:ClaimNumber", "Claim Number");
-			selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:PolicyNumber", "Policy Number");
-			selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:FirstName", "First Name");
-			selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:LastName", "Last Name");
-			selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:CompanyName", "Organization Name");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:ClaimNumber", "Claim Number");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:PolicyNumber", "Policy Number");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:FirstName", "First Name");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:LastName", "Last Name");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:AssignedToGroup", "Assigned To Group");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:AssignedToUser", "Assigned To User");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:CreatedBy", "Created By");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:CatNumber", "CAT/STORM");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:VinNumber", "VIN");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:lossStateActiveSearch", "Loss State");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:ClaimStatus", "Claim Status");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:nwPolicyType", "Policy Type");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:LossType", "Loss Type");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:DateSearch:DateSearchRangeValue", "Search For Date Since");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:DateSearch:DateSearchStartDate", "Search For Data From");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:DateSearch:DateSearchEndDate", "Search For Data To");
-			selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchAndResetInputSet:Search_act", "Search_act");
-			selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:CreateDocument", "Create Document From Template");
-			selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:CreateDocument_act", "Create Document From act");
-			selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:ViewLink_link", "ViewLink_link");
-			selectedParametersMap.put("Login:LoginScreen:LoginDV:username", "User Name");
-			
-			try {
-				NewRelic.getAgent().getLogger().log(Level.INFO, "HttpServlet_instrumentation reading properties");
-				
-				InputStream iStream = this.getClass().getResourceAsStream("params.properties");
-				
-				if (iStream != null) {
-					NewRelic.getAgent().getLogger().log(Level.INFO, "HttpServlet_instrumentation loading properties");
-					Properties props = new Properties();
-					props.load(iStream);
-					Enumeration<?> e = props.propertyNames();
-					while (e.hasMoreElements()) {
-						String key = (String) e.nextElement();
-						String value = props.getProperty(key);
-						selectedParametersMap.put(key.trim(), value.trim());
-					}	
-				} else {
-					NewRelic.getAgent().getLogger().log(Level.INFO, "HttpServlet_instrumentation could not load params.properties");
-				}
-			} catch (Exception e) {
-				NewRelic.getAgent().getLogger().log(Level.ALL, "Error in HttpServlet_instrumentation, " + e.getMessage());
+
+		try {
+			if (selectedParametersMap == null) {
+				this.initMap();
 			}
-			NewRelic.getAgent().getLogger().log(Level.INFO, "Initialized parameter map: " + selectedParametersMap);
+			
+			if (request != null) {
+
+				Map<String, String[]> pMap = request.getParameterMap();
+				for (String pKey : pMap.keySet()) {
+					nrLogger.log(Level.FINER, "NATIONWIDE - Processing request param: " + pKey);
+					String paramDisplayName = selectedParametersMap.get(pKey);
+					if (paramDisplayName != null) {
+						nrLogger.log(Level.FINER, "NATIONWIDE - Found request param: " + pKey);
+						String[] pValue = request.getParameterValues(pKey);
+						if ((pValue != null) && (pValue.length > 0)) {
+							String pValueString = "";
+							for (String pThisString : pValue) {
+								pValueString = pValueString + " " + pThisString;
+							}
+							pValueString = pValueString.trim();
+							if (!pValueString.isEmpty()) {
+								NewRelic.addCustomParameter(paramDisplayName, pValueString);
+								nrLogger.log(Level.FINER, "NATIONWIDE - adding attribute for request parameter: " + paramDisplayName + " = " + pValueString);
+							}
+						} 
+					}
+				}
+				
+				nrLogger.log(Level.FINER, "NATIONWIDE - processing cookies");
+				Cookie[] cookies = request.getCookies();
+				if (cookies != null) {
+					for (int i = 0; i < cookies.length; i++) {
+						Cookie cookie = cookies[i];
+						String cName = cookie.getName();
+						if (cName != null && cName.startsWith("JSESSIONID")) {
+							NewRelic.addCustomParameter(cookie.getName(),
+									cookie.getValue());
+							nrLogger.log(
+									Level.FINER,
+									"NATIONWIDE - adding attribute for JSESSIONID cookie: "
+											+ cookie.getName() + " = "
+											+ cookie.getValue());
+						}
+					}
+				}
+				
+				nrLogger.log(Level.FINER, "NATIONWIDE - processing eventSource");
+				String eventSource = request.getParameter("eventSource");
+				if(eventSource != null && !eventSource.isEmpty()) {
+					nrLogger.log(Level.FINER, "NATIONWIDE - Setting eventSource to transaction name: " + eventSource);
+					AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
+				}
+				
+				nrLogger.log(Level.FINER, "NATIONWIDE - processing request URI");
+				String reqURI = request.getRequestURI();
+				if(reqURI != null && !reqURI.isEmpty()) {
+					NewRelic.addCustomParameter("URI", reqURI);
+					nrLogger.log(Level.FINER, "URI = " + reqURI);
+					if (eventSource == null || eventSource.isEmpty()) {
+						nrLogger.log(Level.FINER, "NATIONWIDE - eventSource not found. Setting URI to transaction name: " + reqURI);
+						AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.FRAMEWORK_HIGH, true, "servlet", reqURI);
+					}
+				}
+			}
+			
+			String name = Thread.currentThread().getName();
+			NewRelic.addCustomParameter("ThreadName", name);
+			
+		} catch (Exception e) {
+			nrLogger.log(Level.WARNING, "Nationwide -- exception processing servlet service method: " + e.getMessage());
 		}
 		
-		if (request != null) {
-
-			Map<String, String[]> pMap = request.getParameterMap();
-			for (String pKey : pMap.keySet()) {
-				String paramDisplayName = selectedParametersMap.get(pKey);
-				if (paramDisplayName != null) {
-					String[] pValue = request.getParameterValues(pKey);
-					if ((pValue != null) && (pValue.length > 0)) {
-						String pValueString = "";
-						for (String pThisString : pValue) {
-							pValueString = pValueString + " " + pThisString;
-						}
-						pValueString = pValueString.trim();
-						if (!pValueString.isEmpty()) {
-							NewRelic.addCustomParameter(paramDisplayName, pValueString);
-							nrLogger.log(Level.FINER, "NATIONWIDE - request parameter: " + paramDisplayName + " = " + pValueString);
-						}
-					} 
-				}
-			}
-			
-			Cookie[] cookies = request.getCookies();
-			for (int i = 0; i < cookies.length; i++) {
-				Cookie cookie = cookies[i];
-				if (cookie.getName().startsWith("JSESSIONID")) {
-					NewRelic.addCustomParameter(cookie.getName(), cookie.getValue());
-				}
-			}
-
-			String eventSource = request.getParameter("eventSource");
-			if(eventSource != null && !eventSource.isEmpty()) {
-				nrLogger.log(Level.FINER, "NATIONWIDE - Setting eventSource to transaction name: " + eventSource);
-				AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
-			}
-			
-			String reqURI = request.getRequestURI();
-			if(reqURI != null && !reqURI.isEmpty()) {
-				NewRelic.addCustomParameter("URI", reqURI);
-				nrLogger.log(Level.FINER, "URI = " + reqURI);
-				if (eventSource == null || eventSource.isEmpty()) {
-					nrLogger.log(Level.FINER, "NATIONWIDE - eventSource not found. Setting URI to transaction name: " + reqURI);
-					AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.FRAMEWORK_HIGH, true, "servlet", reqURI);
-				}
-			}
-		}
 		nrLogger.log(Level.FINER, "NATIONWIDE - Calling original HttpServlet.service method");
 		Weaver.callOriginal();
+	}
+	
+	private synchronized void initMap()  {
+		NewRelic.getAgent().getLogger().log(Level.INFO, "NATIONWIDE Initializing parameter map");
+		
+		if (selectedParametersMap != null) {
+			// must have initialized in another thread
+			NewRelic.getAgent().getLogger().log(Level.INFO, "NATIONWIDE parameter map already initialized");
+			return;
+		}
+		selectedParametersMap = new HashMap<String, String>();
+		selectedParametersMap.put("eventSource", "eventSource");
+		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:ClaimNumber", "Claim Number");
+		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:PolicyNumber", "Policy Number");
+		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:FirstName", "First Name");
+		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:LastName", "Last Name");
+		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:CompanyName", "Organization Name");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:ClaimNumber", "Claim Number");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:PolicyNumber", "Policy Number");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:FirstName", "First Name");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:LastName", "Last Name");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:AssignedToGroup", "Assigned To Group");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:AssignedToUser", "Assigned To User");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:CreatedBy", "Created By");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:CatNumber", "CAT/STORM");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchRequiredInputSet:VinNumber", "VIN");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:lossStateActiveSearch", "Loss State");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:ClaimStatus", "Claim Status");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:nwPolicyType", "Policy Type");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:LossType", "Loss Type");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:DateSearch:DateSearchRangeValue", "Search For Date Since");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:DateSearch:DateSearchStartDate", "Search For Data From");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchOptionalInputSet:DateSearch:DateSearchEndDate", "Search For Data To");
+		selectedParametersMap.put("ClaimSearch:ClaimSearchScreen:ClaimSearchDV:ClaimSearchAndResetInputSet:Search_act", "Search_act");
+		selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:CreateDocument", "Create Document From Template");
+		selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:CreateDocument_act", "Create Document From act");
+		selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:ViewLink_link", "ViewLink_link");
+		selectedParametersMap.put("Login:LoginScreen:LoginDV:username", "User Name");
+		
+		NewRelic.getAgent().getLogger().log(Level.INFO, "NATIONWIDE Initialized parameter map: " + selectedParametersMap.size());
 	}
 }
