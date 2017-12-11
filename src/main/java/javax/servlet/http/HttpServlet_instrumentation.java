@@ -24,7 +24,7 @@ public abstract class HttpServlet_instrumentation {
 	@Trace(dispatcher = true)
 	protected void service(HttpServletRequest request, HttpServletResponse response) {
 		Logger nrLogger = NewRelic.getAgent().getLogger();
-		nrLogger.log(Level.FINER, "NATIONWIDE - Starting HttpServlet service method");
+		nrLogger.log(Level.FINER, "GUIDEWIRE - Starting HttpServlet service method");
 
 		try {
 			if (selectedParametersMap == null) {
@@ -35,10 +35,10 @@ public abstract class HttpServlet_instrumentation {
 
 				Map<String, String[]> pMap = request.getParameterMap();
 				for (String pKey : pMap.keySet()) {
-					nrLogger.log(Level.FINER, "NATIONWIDE - Processing request param: " + pKey);
+					nrLogger.log(Level.FINER, "GUIDEWIRE - Processing request param: " + pKey);
 					String paramDisplayName = selectedParametersMap.get(pKey);
 					if (paramDisplayName != null) {
-						nrLogger.log(Level.FINER, "NATIONWIDE - Found request param: " + pKey);
+						nrLogger.log(Level.FINER, "GUIDEWIRE - Found request param: " + pKey);
 						String[] pValue = request.getParameterValues(pKey);
 						if ((pValue != null) && (pValue.length > 0)) {
 							String pValueString = "";
@@ -48,13 +48,13 @@ public abstract class HttpServlet_instrumentation {
 							pValueString = pValueString.trim();
 							if (!pValueString.isEmpty()) {
 								NewRelic.addCustomParameter(paramDisplayName, pValueString);
-								nrLogger.log(Level.FINER, "NATIONWIDE - adding attribute for request parameter: " + paramDisplayName + " = " + pValueString);
+								nrLogger.log(Level.FINER, "GUIDEWIRE - adding attribute for request parameter: " + paramDisplayName + " = " + pValueString);
 							}
 						} 
 					}
 				}
 				
-				nrLogger.log(Level.FINER, "NATIONWIDE - processing cookies");
+				nrLogger.log(Level.FINER, "GUIDEWIRE - processing cookies");
 				Cookie[] cookies = request.getCookies();
 				if (cookies != null) {
 					for (int i = 0; i < cookies.length; i++) {
@@ -65,27 +65,27 @@ public abstract class HttpServlet_instrumentation {
 									cookie.getValue());
 							nrLogger.log(
 									Level.FINER,
-									"NATIONWIDE - adding attribute for JSESSIONID cookie: "
+									"GUIDEWIRE - adding attribute for JSESSIONID cookie: "
 											+ cookie.getName() + " = "
 											+ cookie.getValue());
 						}
 					}
 				}
 				
-				nrLogger.log(Level.FINER, "NATIONWIDE - processing eventSource");
+				nrLogger.log(Level.FINER, "GUIDEWIRE - processing eventSource");
 				String eventSource = request.getParameter("eventSource");
 				if(eventSource != null && !eventSource.isEmpty()) {
-					nrLogger.log(Level.FINER, "NATIONWIDE - Setting eventSource to transaction name: " + eventSource);
+					nrLogger.log(Level.FINER, "GUIDEWIRE - Setting eventSource to transaction name: " + eventSource);
 					AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
 				}
 				
-				nrLogger.log(Level.FINER, "NATIONWIDE - processing request URI");
+				nrLogger.log(Level.FINER, "GUIDEWIRE - processing request URI");
 				String reqURI = request.getRequestURI();
 				if(reqURI != null && !reqURI.isEmpty()) {
 					NewRelic.addCustomParameter("URI", reqURI);
 					nrLogger.log(Level.FINER, "URI = " + reqURI);
 					if (eventSource == null || eventSource.isEmpty()) {
-						nrLogger.log(Level.FINER, "NATIONWIDE - eventSource not found. Setting URI to transaction name: " + reqURI);
+						nrLogger.log(Level.FINER, "GUIDEWIRE - eventSource not found. Setting URI to transaction name: " + reqURI);
 						AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.FRAMEWORK_HIGH, true, "servlet", reqURI);
 					}
 				}
@@ -95,23 +95,23 @@ public abstract class HttpServlet_instrumentation {
 			NewRelic.addCustomParameter("ThreadName", name);
 			
 		} catch (Exception e) {
-			nrLogger.log(Level.WARNING, "Nationwide -- exception processing servlet service method: " + e.getMessage());
+			nrLogger.log(Level.WARNING, "GUIDEWIRE -- exception processing servlet service method: " + e.getMessage());
 		}
 		
-		nrLogger.log(Level.FINER, "NATIONWIDE - Calling original HttpServlet.service method");
+		nrLogger.log(Level.FINER, "GUIDEWIRE - Calling original HttpServlet.service method");
 		Weaver.callOriginal();
 	}
 	
 	private synchronized void initMap()  {
-		NewRelic.getAgent().getLogger().log(Level.INFO, "NATIONWIDE Initializing parameter map");
-		
 		if (selectedParametersMap != null) {
 			// must have initialized in another thread
-			NewRelic.getAgent().getLogger().log(Level.INFO, "NATIONWIDE parameter map already initialized");
+			NewRelic.getAgent().getLogger().log(Level.INFO, "GUIDEWIRE parameter map already initialized");
 			return;
 		}
+		NewRelic.getAgent().getLogger().log(Level.INFO, "GUIDEWIRE Initializing parameter map");
 		selectedParametersMap = new HashMap<String, String>();
 		selectedParametersMap.put("eventSource", "eventSource");
+		//Below entries are Nationwide specific- modify according to customer needs
 		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:ClaimNumber", "Claim Number");
 		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:PolicyNumber", "Policy Number");
 		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:FirstName", "First Name");
@@ -138,7 +138,7 @@ public abstract class HttpServlet_instrumentation {
 		selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:CreateDocument_act", "Create Document From act");
 		selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:ViewLink_link", "ViewLink_link");
 		selectedParametersMap.put("Login:LoginScreen:LoginDV:username", "User Name");
-		
-		NewRelic.getAgent().getLogger().log(Level.INFO, "NATIONWIDE Initialized parameter map: " + selectedParametersMap.size());
+	
+		NewRelic.getAgent().getLogger().log(Level.INFO, "GUIDEWIRE Initialized parameter map: " + selectedParametersMap.size());
 	}
 }
