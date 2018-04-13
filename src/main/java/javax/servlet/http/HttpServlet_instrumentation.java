@@ -25,6 +25,11 @@ public abstract class HttpServlet_instrumentation {
 	protected void service(HttpServletRequest request, HttpServletResponse response) {
 		Logger nrLogger = NewRelic.getAgent().getLogger();
 		nrLogger.log(Level.FINER, "GUIDEWIRE - Starting HttpServlet service method");
+		nrLogger.log(Level.FINER, "GUIDEWIRE - browser character encoding before GW: " + request.getCharacterEncoding());
+		nrLogger.log(Level.FINER, "GUIDEWIRE - Calling original HttpServlet.service method");
+		Weaver.callOriginal();
+
+		nrLogger.log(Level.FINER, "GUIDEWIRE - browser character encoding after GW: " + request.getCharacterEncoding());
 
 		try {
 			if (selectedParametersMap == null) {
@@ -97,9 +102,6 @@ public abstract class HttpServlet_instrumentation {
 		} catch (Exception e) {
 			nrLogger.log(Level.WARNING, "GUIDEWIRE -- exception processing servlet service method: " + e.getMessage());
 		}
-		
-		nrLogger.log(Level.FINER, "GUIDEWIRE - Calling original HttpServlet.service method");
-		Weaver.callOriginal();
 	}
 	
 	private synchronized void initMap()  {
