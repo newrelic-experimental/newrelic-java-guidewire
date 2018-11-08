@@ -38,10 +38,11 @@ public abstract class HttpServlet_instrumentation {
 			
 			if (request != null) {
 
-				Map<String, String[]> pMap = request.getParameterMap();
+				Map<String, String[]> pMap = request.getParameterMap();				
 				for (String pKey : pMap.keySet()) {
 					nrLogger.log(Level.FINER, "GUIDEWIRE - Processing request param: " + pKey);
 					String paramDisplayName = selectedParametersMap.get(pKey);
+									
 					if (paramDisplayName != null) {
 						nrLogger.log(Level.FINER, "GUIDEWIRE - Found request param: " + pKey);
 						String[] pValue = request.getParameterValues(pKey);
@@ -54,9 +55,11 @@ public abstract class HttpServlet_instrumentation {
 							if (!pValueString.isEmpty()) {
 								NewRelic.addCustomParameter(paramDisplayName, pValueString);
 								nrLogger.log(Level.FINER, "GUIDEWIRE - adding attribute for request parameter: " + paramDisplayName + " = " + pValueString);
+								
 							}
 						} 
 					}
+					
 				}
 				
 				nrLogger.log(Level.FINER, "GUIDEWIRE - processing cookies");
@@ -80,20 +83,28 @@ public abstract class HttpServlet_instrumentation {
 				nrLogger.log(Level.FINER, "GUIDEWIRE - processing eventSource");
 				String eventSource = request.getParameter("eventSource");
 				if(eventSource != null && !eventSource.isEmpty()) {
-					nrLogger.log(Level.FINER, "GUIDEWIRE - Setting eventSource to transaction name: " + eventSource);
-					AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
-				}
-				
-				nrLogger.log(Level.FINER, "GUIDEWIRE - processing request URI");
-				String reqURI = request.getRequestURI();
-				if(reqURI != null && !reqURI.isEmpty()) {
-					NewRelic.addCustomParameter("URI", reqURI);
-					nrLogger.log(Level.FINER, "URI = " + reqURI);
-					if (eventSource == null || eventSource.isEmpty()) {
-						nrLogger.log(Level.FINER, "GUIDEWIRE - eventSource not found. Setting URI to transaction name: " + reqURI);
-						AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.FRAMEWORK_HIGH, true, "servlet", reqURI);
+					if(eventSource.equals("_refresh_"))
+					{
+						String eventParam = request.getParameter("eventParam");
+						if(eventParam != null && !eventParam.isEmpty())
+						{
+							nrLogger.log(Level.FINER,  "GUIDEWIRE - Setting eventParam to transaction name since eventSource was _refresh_: "+ eventParam);
+							AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventParam", eventParam);
+						}
+						else
+						{
+							nrLogger.log(Level.FINER, "GUIDEWIRE - Setting eventSource to transaction name: " + eventSource);
+							AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
+						}
+					}
+					else
+					{
+						nrLogger.log(Level.FINER, "GUIDEWIRE - Setting eventSource to transaction name: " + eventSource);
+						AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
 					}
 				}
+				
+
 			}
 			
 			String name = Thread.currentThread().getName();
@@ -102,6 +113,7 @@ public abstract class HttpServlet_instrumentation {
 		} catch (Exception e) {
 			nrLogger.log(Level.WARNING, "GUIDEWIRE -- exception processing servlet service method: " + e.getMessage());
 		}
+		
 	}
 	
 	private synchronized void initMap()  {
@@ -112,7 +124,9 @@ public abstract class HttpServlet_instrumentation {
 		}
 		NewRelic.getAgent().getLogger().log(Level.INFO, "GUIDEWIRE Initializing parameter map");
 		selectedParametersMap = new HashMap<String, String>();
+		//Starting your parameter key with % will trigger contains logic instead of expecting an exact match
 		selectedParametersMap.put("eventSource", "eventSource");
+		selectedParametersMap.put("eventParam", "eventParam");
 		//Below entries are Nationwide specific- modify according to customer needs
 		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:ClaimNumber", "Claim Number");
 		selectedParametersMap.put("SimpleClaimSearch:SimpleClaimSearchScreen:SimpleClaimSearchDV:PolicyNumber", "Policy Number");
@@ -140,7 +154,11 @@ public abstract class HttpServlet_instrumentation {
 		selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:CreateDocument_act", "Create Document From act");
 		selectedParametersMap.put("ClaimNewDocumentFromTemplateWorksheet:NewDocumentFromTemplateScreen:NewTemplateDocumentDV:ViewLink_link", "ViewLink_link");
 		selectedParametersMap.put("Login:LoginScreen:LoginDV:username", "User Name");
+		selectedParametersMap.put("NewSubmission:NewSubmissionScreen:ProductSettingsDV:DefaultBaseState", "State");
+		
 	
 		NewRelic.getAgent().getLogger().log(Level.INFO, "GUIDEWIRE Initialized parameter map: " + selectedParametersMap.size());
 	}
+
 }
+
