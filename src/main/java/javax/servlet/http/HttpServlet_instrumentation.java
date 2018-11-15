@@ -38,7 +38,25 @@ public abstract class HttpServlet_instrumentation {
 			
 			if (request != null) {
 
-				Map<String, String[]> pMap = request.getParameterMap();				
+				Map<String, String[]> pMap = request.getParameterMap();		
+				boolean bWizardAndScreenCheckNeeded = false;
+				boolean bWizardAndScreenFound = false;
+				boolean bEventSourceValue = false;
+				String pWizard = "";
+				String pScreen = "";
+				String eventSource = request.getParameter("eventSource");
+				if(eventSource != null && !eventSource.isEmpty())
+				{
+					// Setting a boolean so we don't have to do string functions on eventSource again later.
+					bEventSourceValue = true;
+					
+					if(eventSource.indexOf("Wizard:Next_act") > -1)
+					{
+						//Setting a flag to activate additional logic to report wizard and screen name parameters and include them in the trans name
+						bWizardAndScreenCheckNeeded = true;
+					}
+				}
+				// Get all request parameter keys and add custom parameters if they are found in the list of known values.
 				for (String pKey : pMap.keySet()) {
 					nrLogger.log(Level.FINER, "GUIDEWIRE - Processing request param: " + pKey);
 					String paramDisplayName = selectedParametersMap.get(pKey);
@@ -58,6 +76,36 @@ public abstract class HttpServlet_instrumentation {
 								
 							}
 						} 
+					}
+					
+					// Check if we need to capture wizard name and screen name.  Separate if statement to attempt performance improvement.
+					if((bWizardAndScreenCheckNeeded) && (!bWizardAndScreenFound))
+					{
+						// Capture wizard name and screen name in case they are needed to set the transaction name.  They would appear in different parts of a single pKey value.  We only want to store this if we find both.
+						if((pKey.indexOf("Wizard:") > -1) && (pKey.indexOf("Screen:") > -1))
+						{
+							String[] pKeyParts = pKey.split(":");
+							boolean bWizardFound = false;
+							boolean bScreenFound = false;
+							for(String pSplitKey : pKeyParts)
+							{
+								if (pSplitKey.endsWith("Wizard"))
+								{
+									pWizard = pSplitKey.trim();
+									bWizardFound = true;
+								}
+								if (pSplitKey.endsWith("Screen"))
+								{
+									pScreen = pSplitKey.trim();
+									bScreenFound = true;
+								}
+								if ((bWizardFound) && (bScreenFound))
+								{
+									bWizardAndScreenFound = true;
+									break;
+								}
+							}
+						}
 					}
 					
 				}
@@ -80,9 +128,9 @@ public abstract class HttpServlet_instrumentation {
 					}
 				}
 				
+				// eventSource will be the transaction name unless it is _refresh_ and we have a good value for eventParam OR eventSource contains Wizard:Next_act and we captured good wizard and screen names.
 				nrLogger.log(Level.FINER, "GUIDEWIRE - processing eventSource");
-				String eventSource = request.getParameter("eventSource");
-				if(eventSource != null && !eventSource.isEmpty()) {
+				if(bEventSourceValue) {
 					if(eventSource.equals("_refresh_"))
 					{
 						String eventParam = request.getParameter("eventParam");
@@ -99,8 +147,18 @@ public abstract class HttpServlet_instrumentation {
 					}
 					else
 					{
-						nrLogger.log(Level.FINER, "GUIDEWIRE - Setting eventSource to transaction name: " + eventSource);
-						AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
+						if((bWizardAndScreenCheckNeeded) && (bWizardAndScreenFound))
+						{
+							nrLogger.log(Level.FINER,  "GUIDEWIRE - Setting Wizard Name and Screen name to transaction name since eventSource contained Wizard:Next_Act: "+ pWizard+":"+pScreen);
+							AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH,  true,  "WizardAndScreenName", pWizard+":"+pScreen);
+							NewRelic.addCustomParameter("Wizard", pWizard);
+							NewRelic.addCustomParameter("Screen", pScreen);
+						}
+						else
+						{
+							nrLogger.log(Level.FINER, "GUIDEWIRE - Setting eventSource to transaction name: " + eventSource);
+							AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
+						}
 					}
 				}
 				
