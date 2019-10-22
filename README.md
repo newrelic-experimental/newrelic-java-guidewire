@@ -1,5 +1,5 @@
-# guidwire-policycenter
-Custom instrumentation for Guidwire applications, including ClaimCenter and PolicyCenter.
+# guidewire-policycenter
+Custom instrumentation for Guidewire applications, including ClaimCenter and PolicyCenter.
 ### Transaction Renaming
 Default transaction names for these applications are low value (policycenter.do or claimcenter.do).  Transactions are renamed based on the names or values of POST parameters as follows:
 * eventSource
