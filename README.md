@@ -2,7 +2,7 @@
 
 # New Relic Java Instrumentation for Guidewire ClaimCenter and PolicyCenter
 
-Custom instrumentation for Guidewire applications, including ClaimCenter and PolicyCenter.
+Instrumentation for Guidewire applications, including ClaimCenter and PolicyCenter.
 
 ## Installation
 
