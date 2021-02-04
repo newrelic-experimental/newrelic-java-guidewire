@@ -83,10 +83,10 @@ These parameters are added to the transactions to which they apply:
 * Once you determine which ones are relevant you can add them to the Custom Parameter list 
 
 ### SAML Example
-![SAML Example](https://github.com/newrelic-experimental/newrelic-java-guidewire/tree/SSO/images/saml.png)
+![SAML Example](https://github.com/newrelic-experimental/newrelic-java-guidewire/blob/SSO/images/parameters.png)
 
 ### Custom Params Example
-![Custom Params Example](https://github.com/newrelic-experimental/newrelic-java-guidewire/tree/SSO/images/parameters.png)
+![Custom Params Example](https://github.com/newrelic-experimental/newrelic-java-guidewire/blob/SSO/images/saml.png)
 
 ## Support
 
