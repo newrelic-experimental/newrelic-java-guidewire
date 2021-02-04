@@ -65,6 +65,29 @@ These parameters are added to the transactions to which they apply:
 * Login:LoginScreen:LoginDV:username
 * NewSubmission:NewSubmissionScreen:ProductSettingsDV:DefaultBaseState
 
+### Customer Specific Custom Parameters
+* All ~ separated name value pairs in a POST parameter name that contains UserIdAndOrganization
+* All ~ separated name value pairs in a POST parameter name that contains SectionCounter
+* LOB (Line of Business) - Auto, Property, or Umbrella
+
+### userID via SSO
+* username was picked up via custom paramter above in environements with no SSO
+* Once SSO was enabled the username was not being picked up
+* Added functionality to parse 'SAMLResponse' Parameter to pull out userID
+* Required to work with Java 1.6, so leveraged Base64Decoder.java
+
+### Further Extending
+* To find attributes that may be relevant to your customer I found the easiest way to determine what's available is leveraging Browser Dev Tools
+* Chrome & IE both work
+* As you click through the app you can see what Post Parameters are available.
+* Once you determine which ones are relevant you can add them to the Custom Parameter list 
+
+### SAML Example
+![SAML Example](https://github.com/newrelic-experimental/newrelic-java-guidewire/tree/SSO/images/saml.png)
+
+### Custom Params Example
+![Custom Params Example](https://github.com/newrelic-experimental/newrelic-java-guidewire/tree/SSO/images/parameters.png)
+
 ## Support
 
 New Relic has open-sourced this project. This project is provided AS-IS WITHOUT WARRANTY OR DEDICATED SUPPORT. Issues and contributions should be reported to the project here on GitHub. We encourage you to bring your experiences and questions to the [Explorers Hub](https://discuss.newrelic.com) where our community members collaborate on solutions and new ideas.
