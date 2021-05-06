@@ -17,11 +17,12 @@ group = 'com.newrelic.instrumentation'
 version = '1.6'
 
 dependencies {
-  // If using older agent JARs to compile
-  compile fileTree(dir: 'lib', includes: ['*.jar'])
       
-  // 3rd party jars needed to compile:
-  compile 'javax.servlet:servlet-api:2.5'
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+ 
+  implementation group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '6.5.0'
+  implementation group: 'com.newrelic.agent.java', name: 'newrelic-agent', version: '6.5.0'
+  
 }
 
 jar {

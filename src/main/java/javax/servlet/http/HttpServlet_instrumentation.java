@@ -4,11 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import com.newrelic.agent.bridge.AgentBridge;
-import com.newrelic.agent.bridge.TransactionNamePriority;
 import com.newrelic.api.agent.Logger;
 import com.newrelic.api.agent.NewRelic;
 import com.newrelic.api.agent.Trace;
+import com.newrelic.api.agent.TransactionNamePriority;
 import com.newrelic.api.agent.weaver.MatchType;
 import com.newrelic.api.agent.weaver.NewField;
 import com.newrelic.api.agent.weaver.Weave;
@@ -20,7 +19,6 @@ public abstract class HttpServlet_instrumentation {
 	@NewField 
 	private static Map<String, String> selectedParametersMap = null;
 		
-	@SuppressWarnings("unchecked")
 	@Trace(dispatcher = true)
 	protected void service(HttpServletRequest request, HttpServletResponse response) {
 		Logger nrLogger = NewRelic.getAgent().getLogger();
@@ -137,12 +135,12 @@ public abstract class HttpServlet_instrumentation {
 						if(eventParam != null && !eventParam.isEmpty())
 						{
 							nrLogger.log(Level.FINER,  "GUIDEWIRE - Setting eventParam to transaction name since eventSource was _refresh_: "+ eventParam);
-							AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventParam", eventParam);
+							NewRelic.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventParam", eventParam);
 						}
 						else
 						{
 							nrLogger.log(Level.FINER, "GUIDEWIRE - Setting eventSource to transaction name: " + eventSource);
-							AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
+							NewRelic.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
 						}
 					}
 					else
@@ -150,14 +148,14 @@ public abstract class HttpServlet_instrumentation {
 						if((bWizardAndScreenCheckNeeded) && (bWizardAndScreenFound))
 						{
 							nrLogger.log(Level.FINER,  "GUIDEWIRE - Setting Wizard Name and Screen name to transaction name since eventSource contained Wizard:Next_Act: "+ pWizard+":"+pScreen);
-							AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH,  true,  "WizardAndScreenName", pWizard+":"+pScreen);
+							NewRelic.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH,  true,  "WizardAndScreenName", pWizard+":"+pScreen);
 							NewRelic.addCustomParameter("Wizard", pWizard);
 							NewRelic.addCustomParameter("Screen", pScreen);
 						}
 						else
 						{
 							nrLogger.log(Level.FINER, "GUIDEWIRE - Setting eventSource to transaction name: " + eventSource);
-							AgentBridge.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
+							NewRelic.getAgent().getTransaction().setTransactionName(TransactionNamePriority.CUSTOM_HIGH, true, "eventSource", eventSource);
 						}
 					}
 				}
