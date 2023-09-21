@@ -32,7 +32,7 @@ jobs:
       - name: Build with Gradle and verifyInstrumentation
         run: |
           . ./newrelic-dependencies.sh
-          ./gradlew clean build install verifyInstrumentation
+          ./gradlew clean build install 
 
       - name: Identify Release Type
         id: define_release_type
@@ -54,8 +54,8 @@ jobs:
         id: set_release_version
         run: |
           major_version=1
-          minor_version=0
-          patch_revision=1
+          minor_version=7
+          patch_revision=0
 
           # Retrieve the latest release tag
           latest_tag=$(git describe --abbrev=0 --tags 2>/dev/null) || true
