@@ -13,7 +13,7 @@ repositories {
    }
 }
 
-group = 'com.newrelic.instrumentation'
+group = 'com.newrelic.instrumentation.labs'
 version = '1.6'
 
 dependencies {
@@ -27,13 +27,13 @@ dependencies {
 
 jar {
   manifest {
-       attributes 'Implementation-Title': project.group + '.' + project.name, 'Implementation-Vendor-Id': 'Field Instrumentation', 'Implementation-Version': version
+       attributes 'Implementation-Title': project.group + '.' + project.name, 'Implementation-Vendor-Id': 'com.newrelic.labs', 'Implementation-Version': version
   }
 }
 
 task install(dependsOn: jar, type: Copy) {
     description = 'Copies compiled jar to the NEW_RELIC_EXTENSIONS_DIR.'
-    group  = 'New Relic'
+    group  = 'New Relic Labs'
 
     def extDir = System.getenv("NEW_RELIC_EXTENSIONS_DIR") ?: " "
 
