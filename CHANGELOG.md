@@ -1,3 +1,8 @@
+## Version: [v1.7.0](https://github.com/newrelic-experimental/newrelic-java-guidewire/releases/tag/v1.7.0) | Created: 2023-09-21
+### Build Upgrades
+- Updated vendor title
+
+
 ## Installation
 
 To install:
